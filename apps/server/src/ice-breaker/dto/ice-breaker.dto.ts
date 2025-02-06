@@ -1,4 +1,4 @@
-import { LinkedInProfile } from '@server/linkedin/scrape-profile.service';
+import { ScrapeResult } from '@server/linkedin/interfaces/scrape-result';
 import { IsObject, IsString, ValidateNested } from 'class-validator';
 
 export class IceBreakerDTO {
@@ -6,7 +6,7 @@ export class IceBreakerDTO {
   linkedinProfileUrl: string;
 
   @IsString()
-  linkedInData: LinkedInProfile;
+  linkedInData: ScrapeResult['person'];
 
   @IsObject()
   @ValidateNested({

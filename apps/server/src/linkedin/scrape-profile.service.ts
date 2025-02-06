@@ -1,12 +1,8 @@
 import { AllConfigType } from '@server/config/config.type';
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import axios, { AxiosResponse } from 'axios';
+import axios, { AxiosResponse, isAxiosError } from 'axios';
 import { ScrapeResult } from './interfaces/scrape-result';
-
-export interface LinkedInProfile {
-  [key: string]: any;
-}
 
 @Injectable()
 export class ScrapeProfileService {
@@ -15,7 +11,7 @@ export class ScrapeProfileService {
   async scrapeLinkedInProfile(
     url: string,
     mock: boolean = false,
-  ): Promise<LinkedInProfile> {
+  ): Promise<ScrapeResult['person']> {
     let response: AxiosResponse<ScrapeResult>;
 
     if (mock) {
@@ -24,6 +20,9 @@ export class ScrapeProfileService {
       response = await axios.get<ScrapeResult>(linkedinProfileUrl, {
         timeout: 10000,
       });
+
+      const data = response?.data?.person || {};
+      return this.filterEmptyValues(data) as ScrapeResult['person'];
     } else {
       const apiEndpoint = this.configService.getOrThrow(
         'linkedin.scrapeApiUrl',
@@ -38,19 +37,35 @@ export class ScrapeProfileService {
         },
       );
 
-      response = await axios.get<ScrapeResult>(apiEndpoint, {
-        params: {
-          apikey: scrapinApiKey,
-          linkedInUrl: url,
-        },
-        timeout: 10000,
-      });
+      try {
+        response = await axios.get<ScrapeResult>(apiEndpoint, {
+          params: {
+            apikey: scrapinApiKey,
+            linkedInUrl: url,
+          },
+          timeout: 90000,
+        });
+
+        const data = response?.data?.person || {};
+
+        return this.filterEmptyValues(data) as ScrapeResult['person'];
+      } catch (e) {
+        if (isAxiosError(e)) {
+          console.error(e.response?.data);
+          if (e.response?.status === 429) {
+            throw new BadRequestException(
+              'LinkedIn scraping API rate limit reached',
+            );
+          }
+        }
+
+        throw new BadRequestException('Error scraping LinkedIn profile');
+      }
     }
+  }
 
-    const data = response.data.person || {};
-
-    // Filter out empty values and certifications
-    const filteredData = Object.fromEntries(
+  private filterEmptyValues(data: ScrapeResult['person']) {
+    return Object.fromEntries(
       Object.entries(data).filter(([key, value]) => {
         const isEmpty =
           value === null ||
@@ -61,7 +76,5 @@ export class ScrapeProfileService {
         return !isEmpty && key !== 'certifications';
       }),
     );
-
-    return filteredData;
   }
 }

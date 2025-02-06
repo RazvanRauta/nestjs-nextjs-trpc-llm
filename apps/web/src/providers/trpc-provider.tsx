@@ -28,10 +28,20 @@ export default function TrpcProvider({
           url,
           fetch: async (input, init?) => {
             const fetch = getFetch();
-            return fetch(input, {
-              ...init,
-              // credentials: 'include',
-            });
+            const timeout = 90000; // 90 seconds timeout
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+            try {
+              const response = await fetch(input, {
+                ...init,
+                signal: controller.signal,
+              });
+              return response;
+            } finally {
+              clearTimeout(timeoutId);
+            }
           },
           transformer: superjson,
         }),

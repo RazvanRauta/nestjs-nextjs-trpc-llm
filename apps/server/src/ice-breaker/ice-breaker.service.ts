@@ -8,6 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import { RunnableSequence } from '@langchain/core/runnables';
 import { IceBreakerDTO } from './dto/ice-breaker.dto';
 import { outputParser } from './parsers/output.parser';
+import { Person } from '@server/linkedin/interfaces/scrape-result';
 
 @Injectable()
 export class IceBreakerService {
@@ -18,52 +19,61 @@ export class IceBreakerService {
   ) {}
 
   async iceBreakWith(name: string): Promise<IceBreakerDTO> {
-    const linkedinProfileUrl = await this.agentService.lookup(name);
-    if (!linkedinProfileUrl) {
-      return {
-        result: { summary: "Sorry, I can't find any results", facts: [] },
-        linkedinProfileUrl: '',
-        linkedInData: {},
-      };
-    }
-    const linkedInData = await this.scrapeProfileService.scrapeLinkedInProfile(
-      linkedinProfileUrl,
-      true,
-    );
+    try {
+      const linkedinProfileUrl = await this.agentService.lookup(name);
+      if (!linkedinProfileUrl) {
+        return {
+          result: { summary: "Sorry, I can't find any results", facts: [] },
+          linkedinProfileUrl: '',
+          linkedInData: {} as Person,
+        };
+      }
+      const linkedInData =
+        await this.scrapeProfileService.scrapeLinkedInProfile(
+          linkedinProfileUrl,
+        );
 
-    const summaryTemplate = `given the LinkedIn profile information: {information} about a person, I want you to create:
+      const summaryTemplate = `given the LinkedIn profile information: {information} about a person, I want you to create:
     1. A summary of the person's profile
     2. Two interesting facts about the person 
     
     \n {format_instructions}
     `;
 
-    const summaryPromptTemplate = new PromptTemplate({
-      inputVariables: ['information'],
-      template: summaryTemplate,
-      partialVariables: {
-        format_instructions: outputParser.getFormatInstructions(),
-      },
-    });
+      const summaryPromptTemplate = new PromptTemplate({
+        inputVariables: ['information'],
+        template: summaryTemplate,
+        partialVariables: {
+          format_instructions: outputParser.getFormatInstructions(),
+        },
+      });
 
-    const llm = new ChatOpenAI({
-      apiKey: this.configService.get('openai.apiKey', { infer: true }),
-      temperature: 0,
-      model: this.configService.get('openai.model', { infer: true }),
-    });
+      const llm = new ChatOpenAI({
+        apiKey: this.configService.get('openai.apiKey', { infer: true }),
+        temperature: 0,
+        model: this.configService.get('openai.model', { infer: true }),
+      });
 
-    const chain = RunnableSequence.from([
-      summaryPromptTemplate,
-      llm,
-      outputParser,
-    ]);
+      const chain = RunnableSequence.from([
+        summaryPromptTemplate,
+        llm,
+        outputParser,
+      ]);
 
-    const result = await chain.invoke({ information: linkedInData });
+      const result = await chain.invoke({ information: linkedInData });
 
-    return {
-      result,
-      linkedinProfileUrl,
-      linkedInData,
-    };
+      return {
+        result,
+        linkedinProfileUrl,
+        linkedInData,
+      };
+    } catch (error) {
+      console.error('Error in iceBreakWith', error);
+      return {
+        result: { summary: "Sorry, I can't find any results", facts: [] },
+        linkedinProfileUrl: '',
+        linkedInData: {} as Person,
+      };
+    }
   }
 }

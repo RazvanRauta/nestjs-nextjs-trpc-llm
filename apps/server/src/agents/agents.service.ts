@@ -17,7 +17,8 @@ export class AgentsService {
 
   async lookup(name: string): Promise<string | null> {
     const template = `given the full name {name_of_person}, I want you to get me a link to their Linkedin profile Page.
-    Your answer should be a valid Linkedin URL, and the link should not be in a markdown format.`;
+    Your answer should be a valid Linkedin URL, the link should not be in a markdown format, and remove the country related elements from the link.
+    `;
     const promptTemplate = new PromptTemplate({
       template,
       inputVariables: ['name_of_person'],
@@ -51,6 +52,17 @@ export class AgentsService {
         description:
           'useful for when you need to get the Linkedin profile page of a person',
       }),
+      new DynamicTool({
+        name: 'Test if a URL is a Linkedin profile URL',
+        func: (url: string) => this.toolsService.testLinkedInProfileUrl(url),
+        description:
+          'useful for when you need to verify a Linkedin profile URL',
+      }),
+      new DynamicTool({
+        name: 'Clean Linkedin URL',
+        func: (url: string) => this.toolsService.cleanLinkedInUrl(url),
+        description: 'useful for when you need to clean a Linkedin profile URL',
+      }),
     ];
 
     const prompt = await pull<PromptTemplate>('hwchase17/react');
@@ -63,7 +75,7 @@ export class AgentsService {
     const agentExecutor = new AgentExecutor({
       agent,
       tools,
-      verbose: true,
+      verbose: false,
     });
 
     return agentExecutor;
