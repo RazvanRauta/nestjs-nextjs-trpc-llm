@@ -1,38 +1,20 @@
-'use client';
-import { trpc } from '@web/utils/trpc';
+import { SearchProfile } from '@web/components/SearchProfile';
 
-export default function Home() {
-  const name = `Răzvan Răuță`;
-  const { isLoading, error, data } = trpc.iceBreaker.getIceBreaker.useQuery({
-    name,
-  });
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (error) {
-    return <div>Error: {error.message}</div>;
-  }
-
-  if (!data) {
-    return <div>No data</div>;
-  }
-
+export default function Example() {
   return (
-    <div>
-      <h3>{name}</h3>
-
-      <h3>Ice Breaker</h3>
-
-      <p> Summary</p>
-      <p>{data.result.summary}</p>
-
-      <ul>
-        {data.result.facts.map((fact, index) => (
-          <li key={index}>{fact}</li>
-        ))}
-      </ul>
-    </div>
+    <>
+      <header className="bg-white shadow-sm">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+            Dashboard
+          </h1>
+        </div>
+      </header>
+      <main>
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <SearchProfile />
+        </div>
+      </main>
+    </>
   );
 }

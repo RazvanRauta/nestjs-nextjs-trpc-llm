@@ -23,6 +23,9 @@ export class IceBreakerRouter {
           }),
         )
         .query(async ({ input }) => {
+          if (!input.name) {
+            return null;
+          }
           const res = await this.iceBreakerService.iceBreakWith(input.name);
           return res;
         }),
