@@ -10,12 +10,20 @@ import toolsConfig from './tools/config/tools.config';
 import linkedinConfig from './linkedin/config/linkedin.config';
 import openaiConfig from './openai/config/openai.config';
 import { TrpcModule } from './trpc/trpc.module';
+import { PdfParserModule } from './pdf-parser/pdf-parser.module';
+import pdfParserConfig from './pdf-parser/config/pdf-parser.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, toolsConfig, linkedinConfig, openaiConfig],
+      load: [
+        appConfig,
+        toolsConfig,
+        linkedinConfig,
+        openaiConfig,
+        pdfParserConfig,
+      ],
     }),
     CoreModule,
     ToolsModule,
@@ -23,6 +31,7 @@ import { TrpcModule } from './trpc/trpc.module';
     AgentsModule,
     IceBreakerModule,
     TrpcModule,
+    PdfParserModule,
   ],
 })
 export class AppModule {}

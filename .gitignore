@@ -2,3 +2,5 @@ node_modules
 dist
 build
 .env
+apps/server/src/assets/*.pdf
+apps/**/.DS_Store

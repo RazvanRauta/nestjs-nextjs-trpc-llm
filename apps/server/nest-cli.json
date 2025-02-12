@@ -10,6 +10,12 @@
         "swcrcPath": ".swcrc"
       }
     },
+    "assets": [
+      {
+        "include": "**/*.pdf",
+        "watchAssets": true
+      }
+    ],
     "typeCheck": true
   }
 }
