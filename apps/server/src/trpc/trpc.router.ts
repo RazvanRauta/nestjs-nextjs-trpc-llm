@@ -5,16 +5,19 @@ import { FastifyInstance } from 'fastify';
 import { createContext } from './context';
 import { fastifyTRPCPlugin } from '@trpc/server/adapters/fastify';
 import { IceBreakerRouter } from '@server/ice-breaker/ice-breaker.router';
+import { GetTextLengthRouter } from '@server/get-text-length/get-text-length.router';
 
 @Injectable()
 export class TrpcRouter {
   constructor(
     private readonly trpc: TrpcService,
     private readonly iceBreakerRouter: IceBreakerRouter,
+    private readonly getTextLengthRouter: GetTextLengthRouter,
   ) {}
 
   appRouter = this.trpc.router({
     iceBreaker: this.iceBreakerRouter.router,
+    getTextLength: this.getTextLengthRouter.router,
     hello: this.trpc.procedure
       .input(
         z.object({

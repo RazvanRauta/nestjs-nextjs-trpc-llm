@@ -12,6 +12,7 @@ import openaiConfig from './openai/config/openai.config';
 import { TrpcModule } from './trpc/trpc.module';
 import { PdfParserModule } from './pdf-parser/pdf-parser.module';
 import pdfParserConfig from './pdf-parser/config/pdf-parser.config';
+import { GetTextLengthModule } from './get-text-length/get-text-length.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import pdfParserConfig from './pdf-parser/config/pdf-parser.config';
     IceBreakerModule,
     TrpcModule,
     PdfParserModule,
+    GetTextLengthModule,
   ],
 })
 export class AppModule {}
